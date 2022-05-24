@@ -213,7 +213,7 @@ class Blockchain(object): # this class manages the chain by storing transactions
 		self.current_transactions.append({
 			'sender': sender,
 			'recipient': recipient,
-			'cid': new_cid,
+			'new_cid': new_cid,
 		})
 		return self.last_block['index'] + 1
 	
@@ -320,7 +320,7 @@ def mine():
     blockchain.new_cid_added(
         sender="0",
         recipient=node_identifier,
-        cid=0,
+        new_cid=make_cid(version, codec, multihash)
         # amount=1,
     )
 
