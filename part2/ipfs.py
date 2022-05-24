@@ -360,12 +360,12 @@ def new_cid_added():
     values = request.get_json()
 
     # Check that the required fields are in the POST'ed data
-    required = ['sender', 'recipient', 'cid']
+    required = ['sender', 'recipient', 'new_cid']
     if not all(k in values for k in required):
         return 'Missing values', 400
 
     # Create a new cid
-    index = blockchain.new_cid_added(values['sender'], values['recipient'], values['cid'])
+    index = blockchain.new_cid_added(values['sender'], values['recipient'], values['new_cid'])
 
     response = {'message': f'CID will be added to Block {index}'}
     return jsonify(response), 201
