@@ -79,8 +79,6 @@ class CIDv0(BaseCID): #CID version 0 object
     def encode(self): #this is the base58-encoded buffer and returns the cid
         return ensure_bytes(base58.b58encode(self.buffer))
 
-
-        # we can switch between v0 and v1 because the two CIDs are just two different version representations of the same hash. The hash is still unique to the data it represents.
     def to_v1(self): #returns the equivalent in CIDv1 by returning cid.CIDv1 object
         return CIDv1(self.CODEC, self.multihash)
 
@@ -211,11 +209,11 @@ class Blockchain(object): # this class manages the chain by storing transactions
 		self.chain.append(block)
 		return block
 
-	def new_cid_added(self, sender, recipient, cid):
+	def new_cid_added(self, sender, recipient, new_cid):
 		self.current_transactions.append({
 			'sender': sender,
 			'recipient': recipient,
-			'cid': self.new_cid,
+			'cid': new_cid,
 		})
 		return self.last_block['index'] + 1
 	
