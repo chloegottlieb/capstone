@@ -1,10 +1,6 @@
 # capstone
 Hunter CS capstone project (blockchain)
 
-To do:
+Part 1 contains just the book bartering system
 
-Get code from other group members
-
-Consult with Adam to see how it's going for him
-
-Get it running
+Part 2 contains a modified version of the blockchain built out for part 1, including a class generating CID (v0 and v1) which is utilized in the blockchain class
