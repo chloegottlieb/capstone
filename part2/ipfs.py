@@ -13,18 +13,18 @@ import multicodec
 import requests
 from flask import Flask, jsonify, request
 
+import os
+import sys
+
 #this code is a modified version of the blockchain built out in part 1 to include methods for generating CIDs and simulate an IPFS system (waiting on code from non-blockchain group members to make that work)
 
 
 class BaseCID(object): #this class establishes use of CID and creates a new CID object within the IPFS simulation
     __hash__ = object.__hash__
-
     def __init__(self, version, codec, multihash):
-        
         #version (int) CID version (either 0 or 1)
         #codec (string) codec used for encoding the hash
         #multihash (string) the multihash
-
         self._version = version
         self._codec = codec
         self._multihash = ensure_bytes(multihash)
@@ -51,7 +51,6 @@ class BaseCID(object): #this class establishes use of CID and creates a new CID 
     def __repr__(self):
         def truncate(s, length):
             return s[:length] + b'..' if len(s) > length else s
-
         truncate_length = 20
         return '{class_}(version={version}, codec={codec}, multihash={multihash})'.format(
             class_=self.__class__.__name__,
@@ -81,7 +80,6 @@ class CIDv0(BaseCID): #CID version 0 object
 
     def to_v1(self): #returns the equivalent in CIDv1 by returning cid.CIDv1 object
         return CIDv1(self.CODEC, self.multihash)
-
 
 class CIDv1(BaseCID): #CID version 1 object
     def __init__(self, codec, multihash):
@@ -117,7 +115,6 @@ def make_cid(*args): #Creates cid.CIDv0 or cid.CIDv1 object
             return from_bytes(data)
         else:
             raise ValueError('invalid argument passed, expected: str or byte, found: {}'.format(type(data)))
-
     elif len(args) == 3:
         version, codec, multihash = args
         if version not in (0, 1):
@@ -142,28 +139,23 @@ def is_cid(cidstr): #Checks if a given input string is valid encoded CID or not
     except ValueError:
         return False
 
-
 def from_string(cidstr): #Creates a CID object from a encoded form
     cidbytes = ensure_bytes(cidstr, 'utf-8')
     return from_bytes(cidbytes)
 
-
 def from_bytes(cidbytes): #Creates a CID object from a encoded form
 #if the base58-encoded string is not a valid string or if the length of the argument is zero or if the length of decoded CID is invalid
-
     if len(cidbytes) < 2:
     	raise ValueError('argument length can not be zero')
     if cidbytes[0] != 0 and multibase.is_encoded(cidbytes):
         # if the bytestream is multibase encoded
         cid = multibase.decode(cidbytes)
-
         if len(cid) < 2:
             raise ValueError('cid length is invalid')
         data = cid[1:]
         version = int(cid[0])
         codec = multicodec.get_codec(data)
         multihash = multicodec.remove_prefix(data)
-
     elif cidbytes[0] in (0, 1):
         # if the bytestream is a CID
         version = cidbytes[0]
@@ -190,7 +182,7 @@ def from_bytes(cidbytes): #Creates a CID object from a encoded form
 class Blockchain(object): # this class manages the chain by storing transactions and allowing new blocks to be added to the chain
 	def __init__(self):
 		self.chain = []
-		self.current_transactions = []
+		self.current_cids = []
 		self.new_block(previous_hash='1',proof=500) #genesis block
 		self.new_cid = make_cid(version, codec, multihash)
         
@@ -200,17 +192,17 @@ class Blockchain(object): # this class manages the chain by storing transactions
 		block = {
 			'index': len(self.chain) + 1,
 			'timestamp': time(),
-			'transactions': self.current_transactions,
+			'cids': self.current_cids,
 			'proof': proof,
 			'previous_hash': previous_hash or self.hash(self.chain[-1]),
 		}
 
-		self.current_transactions = []
+		self.current_cids = []
 		self.chain.append(block)
 		return block
 
 	def new_cid_added(self, sender, recipient, new_cid):
-		self.current_transactions.append({
+		self.current_cids.append({
 			'sender': sender,
 			'recipient': recipient,
 			'new_cid': new_cid,
@@ -405,5 +397,31 @@ def consensus():
 
     return jsonify(response), 200
 
+
+
+
+#Matthew (networking) code portion
+
+# must be in directory with node.cpp executable
+
+argc = len(sys.argv)
+blocks = []
+i = 1
+
+while i < argc:
+    blocks.append(argv[i])
+    i += 1
+
+os.system('./node 54000') # init user node (collects data)
+for block in blocks:
+    os.system('./node 54001 54000 move '+block) # collect each block
+
+filename = input('Enter desired filename: ')
+with open(filename, 'w') as outfile:
+    for b in blocks:
+        with open (b+'.txt') as infile:
+            outfile.write(infile.read())
+        outfile.write('\n')
+    
 
 	    
